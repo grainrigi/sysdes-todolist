@@ -39,9 +39,9 @@ class Tasks @Inject()(dbcp: DBConfigProvider)(implicit ec: ExecutionContext) ext
       sqlu"UPDATE #$table SET title = ${task.title}, description = ${task.description}, is_done = ${task.isDone} WHERE id = ${task.id}"
     )
 
-  def delete(id: Int) =
+  def delete(userId: Int, id: Int) =
     db.run(
-      sqlu"DELETE FROM #$table WHERE id = $id"
+      sqlu"DELETE FROM #$table WHERE id = $id AND user_id = $userId"
     )
 
   def getById(userId: Int, id: Int): Future[Option[Task]] =

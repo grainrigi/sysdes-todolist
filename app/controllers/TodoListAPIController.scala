@@ -128,7 +128,7 @@ class TodoListAPIController @Inject()(cc: ControllerComponents, users: Users, ta
   def deleteTask(id: Int) =
     authorized(Action.async { implicit request =>
       tasks
-        .delete(id)
+        .delete(userId, id)
         .map(_ => Ok(JsBoolean(true)))
     })
 
