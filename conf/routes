@@ -1,0 +1,24 @@
+# TodoList
+GET     /                           controllers.TodoListController.index
+GET     /register                   controllers.TodoListController.register
+GET     /login                      controllers.TodoListController.login
+GET     /home                       controllers.TodoListController.home
+GET     /passwd                     controllers.TodoListController.passwd
+GET     /deregister                 controllers.TodoListController.deregister
+
+# TodoList(API)
+POST    /api/register               controllers.TodoListAPIController.register
+POST    /api/login                  controllers.TodoListAPIController.login
+GET     /api/logout                 controllers.TodoListAPIController.logout
+POST    /api/passwd                 controllers.TodoListAPIController.passwd
+POST    /api/deregister             controllers.TodoListAPIController.deregister
+
+GET     /api/tasks                  controllers.TodoListAPIController.getTasks(undone:Boolean ?= false)
+POST    /api/tasks                  controllers.TodoListAPIController.addTask
+DELETE  /api/tasks/:id              controllers.TodoListAPIController.deleteTask(id: Int)
+PUT     /api/tasks/:id              controllers.TodoListAPIController.updateTask(id: Int)
+
+# Resources
+GET     /robot.txt                  controllers.Default.notFound
+GET     /favicon.ico                controllers.Assets.at(path="/public/images", file="favicon.png")
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

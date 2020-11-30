@@ -1,0 +1,74 @@
+@*
+* ログインページ
+*@
+
+@** 引数は不要 *@
+@()(implicit request: Request[AnyContent])
+
+@main("ログイン") {
+<v-container fluid>
+    <v-row justify="center">
+        <v-col class="text-center" lg="3" md="4" sm="6">
+            <h2>ログイン</h2>
+            <v-card class="pt-4 pb-3 mt-2">
+                <v-card-text class="red--text text-center my-2" v-if="errorMessage">
+                    {{ errorMessage }}
+                </v-card-text>
+                <div style="width: 73%; margin: 0 auto;" class="text-center">
+                    <v-form @@submit.prevent="onSubmit" v-model="valid">
+                        <v-text-field
+                                class="my-2"
+                                label="ユーザー名"
+                                v-model="user"
+                                prepend-icon="mdi-account"
+                                :rules="[function(v) { return !!v || 'ユーザー名を入力してください'; }]"
+                        ></v-text-field>
+                        <v-text-field
+                                class="mt-2 mb-0"
+                                label="パスワード"
+                                type="password"
+                                v-model="pass"
+                                prepend-icon="mdi-lock"
+                                :rules="[function(v) { return !!v || 'パスワードを入力してください'; }]"
+                        ></v-text-field>
+                        <v-btn
+                            class="mx-auto mb-3 d-block"
+                            type="submit"
+                            color="blue"
+                            :dark="valid"
+                            :disabled="!valid"
+                        >ログイン</v-btn>
+                    </v-form>
+                </div>
+            </v-card>
+        </v-col>
+    </v-row>
+</v-container>
+<script>
+        var options = {
+            data: {
+                user: '',
+                pass: '',
+                errorMessage: '',
+                valid: false,
+            },
+            methods: {
+                onSubmit: function() {
+                    var self = this;
+                    // ログインリクエストを送信
+                    return axios.post('/login', {
+                        name: self.user,
+                        pass: self.pass,
+                    }).then(function(response) {
+                        var result = response.data;
+                        if (typeof result === 'string') {
+                            self.errorMessage = result;
+                        } else if (result === true) {
+                            location.href = '/home';
+                        }
+                    });
+                },
+            },
+        };
+    </script>
+}

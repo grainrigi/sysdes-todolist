@@ -1,0 +1,44 @@
+@*
+ * インデックスページ
+ * - TodoアプリのLP
+ *@
+
+@** 引数は不要 *@
+@()(implicit request: Request[AnyContent])
+
+@main("Todo List - 日常のタスクを管理") {
+    <v-container fluid>
+        <v-row justify="center">
+            <v-col class="text-center" lg="4" md="6" sm="10">
+                <h1>忘れる前に書く、忘れた頃に知る</h1>
+                <div class="text-left">
+                    日常のタスクを管理しましょう。
+                    Todo Listを使えば、降ってきたタスクをすぐに書き留めることができます。
+                    まずは以下のボタンからユーザー登録。
+                </div>
+                <div class="pa-6">
+                    <v-btn
+                            dark
+                            x-large
+                            class="mx-2"
+                            color="blue"
+                            style="width: 12em;"
+                            href="/register"
+                            tag="a"
+                    >新規ユーザー登録</v-btn>
+                    <v-btn
+                            x-large
+                            class="mx-2"
+                            color="white"
+                            style="width: 12em;"
+                            href="/login"
+                            tag="a"
+                    >ログイン</v-btn>
+                </div>
+            </v-col>
+        </v-row>
+    </v-container>
+    <script>
+        var options = {};
+    </script>
+}

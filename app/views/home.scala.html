@@ -1,0 +1,269 @@
+@*
+ * メインページ
+ * - Todoアプリの全操作はここで行う
+ *@
+
+@** 引数は不要 *@
+@()(implicit request: Request[AnyContent])
+
+@main("Home") {
+    <v-container fluid>
+        <v-row justify="center">
+            <v-col lg="3" md="4" sm="6">
+                <v-row dense>
+                    <v-col cols="12">
+                        <h2>タスク一覧</h2>
+                        <v-btn-toggle
+                                class="purple--text elevation-1"
+                                mandatory
+                                tile
+                                group
+                                v-model="taskFilter"
+                        >
+                            <v-btn>
+                                すべて
+                            </v-btn>
+                            <v-btn>
+                                未完了
+                            </v-btn>
+                        </v-btn-toggle>
+                    </v-col>
+                    <v-col cols="12">
+                        <v-btn
+                                color="blue"
+                                dark
+                                @@click="startAdd"
+                        ><v-icon>mdi-plus</v-icon> タスクを追加</v-btn>
+                        <!-- タスク追加フォーム -->
+                        <v-card class="pt-4 pb-3 mt-2" v-if="showAdd">
+                            <div style="width: 73%; margin: 0 auto;" class="text-center">
+                                <v-form @@submit.prevent="onAdd" v-model="addValid">
+                                    <v-text-field
+                                            class="my-2"
+                                            label="タイトル"
+                                            v-model="addTitle"
+                                            :rules="[function(v) { return !!v || 'タイトルを入力してください'; }]"
+                                    ></v-text-field>
+                                    <v-textarea
+                                            class="mt-2 mb-0"
+                                            label="説明(オプション)"
+                                            v-model="addDescription"
+                                    ></v-textarea>
+                                    <div class="text-center mb-3">
+                                        <v-btn
+                                                class="mx-2"
+                                                type="submit"
+                                                color="blue"
+                                                :dark="addValid"
+                                                :disabled="!addValid"
+                                        >追加</v-btn>
+                                        <v-btn
+                                                class="mx-2"
+                                                type="submit"
+                                                color="white"
+                                                @@click="cancelAdd"
+                                        >キャンセル</v-btn>
+                                    </div>
+                                </v-form>
+                            </div>
+                        </v-card>
+                        <v-alert
+                                v-if="addSuccess"
+                                type="success"
+                                class="mt-2"
+                        >タスクを正常に追加しました。</v-alert>
+                    </v-col>
+                    <v-col cols="12">
+                        <h4 v-if="tasks.length === 0">タスクはありません</h4>
+                        <v-card
+                                v-else
+                                v-for="task in tasks"
+                                :key="task.id"
+                                class="mt-2"
+                        >
+                            <v-list-item two-line>
+                                <v-list-item-content>
+                                    <v-list-item-title class="text-h6" v-if="!task.editing">
+                                        <v-icon color="red" v-if="!task.isDone">mdi-alert-decagram</v-icon>
+                                        <v-icon color="green" v-else>mdi-check-circle</v-icon>
+                                        {{ task.title }}
+                                    </v-list-item-title>
+                                    <v-list-item-title v-else>
+                                        <v-text-field
+                                                class="mt-2 mb-0"
+                                                label="タイトル"
+                                                v-model="task.editTitle"
+                                                :rules="[function(v) { return !!v || 'タイトルを入力してください'; }]"
+                                        ></v-text-field>
+                                    </v-list-item-title>
+                                    <v-list-item-subtitle v-if="!task.editing">{{ task.description }}</v-list-item-subtitle>
+                                    <v-list-item-subtitle v-else>
+                                        <v-textarea
+                                                class="mt-2 mb-0"
+                                                label="説明"
+                                                v-model="task.editDescription"
+                                        ></v-textarea>
+                                    </v-list-item-subtitle>
+                                </v-list-item-content>
+                                <v-list-item-action>
+                                    <v-list-item-action-text>{{ timestamp2str(now, task.createdAt) }}</v-list-item-action-text>
+                                </v-list-item-action>
+                            </v-list-item>
+                            <v-card-actions v-if="!task.editing">
+                                <v-btn text class="mr-3" v-if="!task.isDone" @@click="updateTask(task.id, task.title, task.description, true)">
+                                    <v-icon color="green">mdi-check</v-icon>
+                                    完了させる
+                                </v-btn>
+                                <v-btn text class="mr-3" @@click="deleteTask(task.id)">
+                                    <v-icon color="red">mdi-delete</v-icon>
+                                    削除
+                                </v-btn>
+                                <v-btn text class="mr-3" @@click="startEdit(task)">
+                                    <v-icon color="blue">mdi-pencil</v-icon>
+                                    編集
+                                </v-btn>
+                            </v-card-actions>
+                            <v-card-actions v-else>
+                                <v-btn text class="mr-3"@@click="completeEdit(task)">
+                                    <v-icon color="green">mdi-check</v-icon>
+                                    反映する
+                                </v-btn>
+                                <v-btn text class="mr-3" @@click="task.editing = false">
+                                    <v-icon color="red">mdi-close</v-icon>
+                                    キャンセル
+                                </v-btn>
+
+                            </v-card-actions>
+                        </v-card>
+                    </v-col>
+                </v-row>
+            </v-col>
+        </v-row>
+    </v-container>
+    <script>
+        function timestamp2str(now, timestamp) {
+            var diff = Math.ceil((now - timestamp) / 1000);
+            if (diff < 60) return "今";
+            if (diff < 3600) return Math.floor(diff/60) + "分前";
+            if (diff < 86400) return Math.floor(diff/3600) + "時間前";
+            if (diff < 604800) return Math.floor(diff/86400) + "日前";
+            else {
+              var nowDate = new Date(now);
+              var date = new Date(timestamp * 1000);
+              if (nowDate.getFullYear() === date.getFullYear()) {
+                return (date.getMonth()+1) + "月" + date.getDate() + "日";
+              } else {
+                return date.getFullYear() + "年" + (date.getMonth()+1) + "月" + date.getDate() + "日";
+              }
+            }
+        }
+
+        var options = {
+            data: {
+                showAdd: false,
+                addTitle: '',
+                addDescription: '',
+                addValid: false,
+                addSuccess: false,
+
+                isTasksValid: false,
+                tasks: [],
+                now: (new Date()).valueOf(),
+
+                taskFilter: 1,
+            },
+            computed: {
+                validAll: function() {
+                  return this.valid && !!this.passConfirm;
+                },
+            },
+            watch: {
+                isTasksValid: {
+                    handler: 'refetchTask',
+                    immediate: true,
+                },
+                taskFilter: {
+                    handler: function () { this.isTasksValid = false; },
+                    immediate: true,
+                },
+            },
+            methods: {
+                refetchTask: function(valid) {
+                    if (!valid) {
+                        var self = this;
+                        axios.get('/tasks' + (this.taskFilter === 1 ? '?undone=true' : ''))
+                            .then(function(response) {
+                                var tasks = response.data;
+                                tasks.forEach(function (task) { task.editing = false; });
+                                self.tasks = tasks;
+                                self.isTasksValid = true;
+                            });
+                    }
+                },
+                startAdd: function() {
+                    this.addTitle = '';
+                    this.addDescription = '';
+                    this.showAdd = true;
+                },
+                cancelAdd: function() {
+                    this.showAdd = false;
+                },
+                onAdd: function() {
+                    var self = this;
+                    // 追加操作を行う
+                    return axios.post('/tasks', {
+                        title: this.addTitle,
+                        description: this.addDescription,
+                    }).then(function(response) {
+                        self.showAdd = false;
+                        self.addSuccess = true;
+                        self.isTasksValid = false;
+                        setTimeout(function() { self.addSuccess = false; }, 2000);
+                    });
+                },
+
+                timestamp2str: timestamp2str,
+
+                deleteTask: function(id) {
+                    var self = this;
+                    return axios.delete('/tasks/' + id)
+                      .then(function(response) {
+                        self.isTasksValid = false;
+                      });
+                },
+
+                updateTask: function(id, title, description, isDone) {
+                    var self = this;
+                    return axios.put('/tasks/' + id, {
+                        title: title,
+                        description: description,
+                        isDone: isDone,
+                    }).then(function(response) {
+                        self.isTasksValid = false;
+                    });
+                },
+
+                startEdit: function(task) {
+                    Vue.set(task, "editTitle", task.title);
+                    Vue.set(task, "editDescription", task.description);
+                    task.editing = true;
+                },
+                completeEdit: function(task) {
+                    task.editing = false;
+                    var self = this;
+                    return axios.put('/tasks/' + task.id, {
+                        title: task.editTitle,
+                        description: task.editDescription,
+                        isDone: task.isDone,
+                    }).then(function(response) {
+                        self.isTasksValid = false;
+                    });
+                },
+            },
+            mounted: function() {
+                var self = this;
+                setInterval(function() { self.now = (new Date()).valueOf(); }, 20000);
+            },
+        };
+    </script>
+}

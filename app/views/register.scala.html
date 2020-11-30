@@ -1,0 +1,103 @@
+@*
+* 登録ページ
+*@
+
+@** 引数は不要 *@
+@()(implicit request: Request[AnyContent])
+
+@main("新規登録") {
+<v-container fluid>
+    <v-row justify="center">
+        <v-col class="text-center" lg="3" md="4" sm="6" v-if="!registered">
+            <h2>新規登録</h2>
+            <v-card class="pt-4 pb-3 mt-2">
+                <v-card-text class="red--text text-center my-2" v-if="errorMessage">
+                    {{ errorMessage }}
+                </v-card-text>
+                <div style="width: 73%; margin: 0 auto;" class="text-center">
+                    <v-form @@submit.prevent="onSubmit" v-model="valid">
+                        <v-text-field
+                                class="my-2"
+                                label="ユーザー名"
+                                v-model="user"
+                                prepend-icon="mdi-account"
+                                :rules="[function(v) { return !!v || 'ユーザー名を入力してください'; }]"
+                        ></v-text-field>
+                        <v-text-field
+                                class="mt-2 mb-0"
+                                label="パスワード"
+                                type="password"
+                                v-model="pass"
+                                prepend-icon="mdi-lock"
+                                :rules="[function(v) { return !!v || 'パスワードを入力してください'; }]"
+                        ></v-text-field>
+                        <v-text-field
+                                class="mb-2 mt-0"
+                                label="パスワード(確認)"
+                                type="password"
+                                v-model="passConfirm"
+                                prepend-icon="mdi-user"
+                                :rules="[function(v) { return v === pass || 'パスワードが一致しません'; }]"
+                        ></v-text-field>
+                        <v-btn
+                            class="mx-auto mb-3 d-block"
+                            type="submit"
+                            color="blue"
+                            :dark="validAll"
+                            :disabled="!validAll"
+                        >ユーザー登録</v-btn>
+                    </v-form>
+                </div>
+            </v-card>
+        </v-col>
+        <v-col class="text-center" lg="3" md="4" sm="6" v-else>
+            <h2>登録完了</h2>
+            <div class="text-left">
+                正常に登録が完了しました。以下のボタンからログインページに移動してください。
+            </div>
+            <v-btn
+                    x-large
+                    class="mx-2"
+                    color="white"
+                    style="width: 12em;"
+                    href="/login"
+                    tag="a"
+            >ログインページへ</v-btn>
+        </v-col>
+    </v-row>
+</v-container>
+<script>
+        var options = {
+            data: {
+                user: '',
+                pass: '',
+                passConfirm: '',
+                errorMessage: '',
+                valid: false,
+                registered: false,
+            },
+            computed: {
+                validAll: function() {
+                  return this.valid && !!this.passConfirm;
+                },
+            },
+            methods: {
+                onSubmit: function() {
+                    var self = this;
+                    // 登録操作を行う
+                    return axios.post('/register', {
+                        name: self.user,
+                        pass: self.pass,
+                    }).then(function(response) {
+                        var result = response.data;
+                        if (typeof result === 'string') {
+                            self.errorMessage = result;
+                        } else if (result === true) {
+                            self.registered = true;
+                        }
+                    });
+                },
+            },
+        };
+    </script>
+}

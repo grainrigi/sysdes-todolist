@@ -1,0 +1,77 @@
+@*
+* パスワード変更ページ
+*@
+
+@** 引数は不要 *@
+@()(implicit request: Request[AnyContent])
+
+@main("退会") {
+<v-container fluid>
+    <v-row justify="center">
+        <v-col class="text-center" lg="3" md="4" sm="6" v-if="!completed">
+            <h2>退会</h2>
+            <div class="text-left">
+                <strong class="red--text">【警告】退会処理を行うとあなたが登録した全てのデータが削除されます！</strong><br>
+                続行するには現在のパスワードを入力してください。
+            </div>
+            <v-card class="pt-4 pb-3 mt-2">
+                <v-card-text class="red--text text-center my-2" v-if="errorMessage">
+                    {{ errorMessage }}
+                </v-card-text>
+                <div style="width: 73%; margin: 0 auto;" class="text-center">
+                    <v-form @@submit.prevent="onSubmit" v-model="valid">
+                        <v-text-field
+                                class="mt-2 mb-0"
+                                label="現在のパスワード"
+                                type="password"
+                                v-model="current"
+                                prepend-icon="mdi-lock"
+                                :rules="[function(v) { return !!v || '現在のパスワードを入力してください'; }]"
+                        ></v-text-field>
+                        <v-btn
+                            class="mx-auto mb-3 d-block"
+                            type="submit"
+                            color="blue"
+                            :dark="valid"
+                            :disabled="!valid"
+                        >退会</v-btn>
+                    </v-form>
+                </div>
+            </v-card>
+        </v-col>
+        <v-col class="text-center" lg="3" md="4" sm="6" v-else>
+            <h2>退会完了</h2>
+            <div class="text-left">
+                正常に退会が完了しました。<br>
+                Todo Listをご利用いただきありがとうございました。
+            </div>
+        </v-col>
+    </v-row>
+</v-container>
+<script>
+        var options = {
+            data: {
+                current: '',
+                errorMessage: '',
+                valid: false,
+                completed: false,
+            },
+            methods: {
+                onSubmit: function() {
+                    var self = this;
+                    // 退会操作を行う
+                    return axios.post('/deregister', {
+                        current: self.current,
+                    }).then(function(response) {
+                        var result = response.data;
+                        if (typeof result === 'string') {
+                            self.errorMessage = result;
+                        } else if (result === true) {
+                            self.completed = true;
+                        }
+                    });
+                },
+            },
+        };
+    </script>
+}
